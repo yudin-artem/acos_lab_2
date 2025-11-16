@@ -1,5 +1,4 @@
 import os
-import time
 
 class Client:
     def __init__(self, descriptor_path="channel.txt"):
