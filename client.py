@@ -4,8 +4,8 @@ class Client:
     def __init__(self, descriptor_path="channel.txt"):
         self.descriptor_path = descriptor_path
         if not os.path.exists(self.descriptor_path):
-            with open(self.descriptor_path, 'w'):
-                pass
+            with open(self.descriptor_path, 'w') as f:
+                self.fd = f.fileno()
     
     def send_request(self, request_data):
         """Отправляет запрос серверу"""
