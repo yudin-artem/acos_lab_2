@@ -9,6 +9,11 @@ class Client:
     
     def send_request(self, request_data):
         """Отправляет запрос серверу"""
+        try:
+            with open(self.descriptor_path, 'w') as f:
+                f.write(str(request_data))
+        except Exception as e:
+            self.handle_error(e)
     
     def wait_for_response(self, timeout=5):
         """Ожидает ответ от сервера"""

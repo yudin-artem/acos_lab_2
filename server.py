@@ -9,7 +9,15 @@ class Server:
     
     def get_request(self, request_data):
         """Обрабатывает запрос от клиента"""
-    
+        if not request_data:
+            return None
+        data = request_data.strip()
+
+        if data == "Ping":
+            return "Pong"
+        else:
+            return f"Server response to {data}"
+        
     def send_response(self, response_data):
         """Отправляет ответ клиенту"""
     
