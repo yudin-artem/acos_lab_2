@@ -12,6 +12,14 @@ class Server:
     
     def send_response(self, response_data):
         """Отправляет ответ клиенту"""
+        try:
+            with open(self.descriptor_path, 'w') as f:
+                f.write(response_data)
+                f.flush()  
+            return True
+        except Exception as e:
+            self.handle_error(e)
+            return False
     
     def handle_error(self, error):
         """Обрабатывает ошибки"""
