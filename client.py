@@ -3,49 +3,51 @@ import time
 
 class Client:
     def __init__(self, descriptor_path="channel.txt"):
-        self.descriptor_path = descriptor_path
-        if not os.path.exists(self.descriptor_path):
-            with open(self.descriptor_path, 'w') as f:
-                self.fd = f.fileno()
+        try:
+            self.descriptor_path = descriptor_path
+            self.file = open(self.descriptor_path, 'a+')
+            self.timeout = 5
+            self._attempted_fix = False
+        except Exception as e:
+            print(f"Клиент: Ошибка инициализации: {e}")
+            raise
     
     def send_request(self, request_data):
         """Отправляет запрос серверу"""
         try:
-            with open(self.descriptor_path, 'w') as f:
-                f.write(str(request_data))
+            print(f"Клиент: Отправляю запрос '{request_data}'")
+            self.clear_file()
+            self.file.write(str(request_data))
+            self.file.flush()
+            return 'ok'
         except Exception as e:
-            self.handle_error(e)
+            return self.handle_error(e)
     
-    def wait_for_response(self, timeout=5):
+    def wait_for_response(self, timeout):
         """Ожидает ответ от сервера"""
-        print("Клиент: Ожидаю ответ от сервера")
         start_time = time.time()
-        last_content = ""
         
         while time.time() - start_time < timeout:
             try:
-                with open(self.descriptor_path, 'r') as f:
-                    content = f.read().strip()
-                    if content and content != last_content: 
-                        print(f"Клиент: Получен ответ '{content}'")
-                        return content
-                time.sleep(0.1) 
+                self.file.seek(0)
+                content = self.file.read().strip().lower()
+                if content and content != "": 
+                    print(f"Клиент: Получен ответ '{content}'")
+                    return content
+                time.sleep(0.5) 
             except Exception as e:
-                result = self.handle_error(e)
-                if result == "fatal":
-
+                return self.handle_error(e)
+        return self.handle_error(TimeoutError("Сервер: Таймаут ожидания запроса"))
     
     def get_response(self, response_data):
         """Обрабатывает ответ от сервера"""
         if response_data == "pong":
-            print(f"LOG: Успех! Сервер подтвердил связь.")
-            return True
+            print(f"Успех! Сервер подтвердил связь.\n")
+            return "ok"
         elif response_data is None:
-            print("LOG: Ошибка. Ответ не получен (Timeout).")
-            return False
+            return self.handle_error(TimeoutError("Сервер: Таймаут ожидания запроса"))
         else:
-            print(f"LOG: Ошибка протокола. Получено: {response_data}")
-            return False
+            return self.handle_error(Exception(f"Неожиданный ответ от сервера: {response_data}"))
     
     def handle_error(self, error):
         """Обрабатывает ошибки"""
@@ -60,8 +62,7 @@ class Client:
         if error_type == 'FileNotFoundError':
             print("Попытка создать файл.")
             try:
-                with open(self.descriptor_path, 'w') as f:
-                    pass
+                self.file = open(self.descriptor_path, 'w')
                 print("Файл создан.")
                 self._attempted_fix = True
                 return "retry"
@@ -79,9 +80,9 @@ class Client:
             print("Возникла проблема доступа. Попытка восстановить.")
             try:
                 if os.path.exists(self.descriptor_path):
+                    self.file.close()
                     os.remove(self.descriptor_path)
-                with open(self.descriptor_path, 'w') as f:
-                    pass
+                self.file = open(self.descriptor_path, 'w')
                 print("Доступ восстановлен.")
                 self._attempted_fix = True
                 return "retry"
@@ -93,6 +94,38 @@ class Client:
         
     def run(self):
         """Основной цикл клиента"""
+        while True:
+            res = self.send_request("ping")
+            if res == "retry": 
+                time.sleep(2)
+                continue 
+            if res == "fatal": 
+                print("Клиент: Завершение работы")
+                break
+
+            time.sleep(2)
+            resp = self.wait_for_response(self.timeout)
+            if resp == "retry": 
+                time.sleep(2)
+                continue 
+            if resp == "fatal": 
+                print("Клиент: Завершение работы")
+                break
+            self.clear_file()
+
+            res = self.get_response(resp)
+            if res == "retry":
+                time.sleep(2)
+                continue
+            if res == "fatal":
+                print("Клиент: Завершение работы")
+                break
+
+        self.file.close()
+
+    def clear_file(self):
+        self.file.seek(0)
+        self.file.truncate(0)
     
 
 if __name__ == "__main__":
