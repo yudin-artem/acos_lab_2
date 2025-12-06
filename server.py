@@ -1,4 +1,6 @@
 import os
+import time
+import io 
 
 class Server:
     def __init__(self, descriptor_path="channel.txt"):
@@ -14,7 +16,12 @@ class Server:
         """Отправляет ответ клиенту"""
     
     def handle_error(self, error):
-        """Обрабатывает ошибки"""
+        print(f"--- Сервер ОШИБКА: {type(error).__name__} ---")
+        if isinstance(error, (IOError, OSError)):
+            print(f"Ошибка ввода/вывода или IPC: {error}")
+            time.sleep(2) 
+        else:
+            print(f"Непредвиденная ошибка: {error}")
     
     def wait_for_request(self):
         """Ожидает запрос от клиента"""
