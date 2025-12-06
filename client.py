@@ -10,12 +10,42 @@ class Client:
     
     def send_request(self, request_data):
         """Отправляет запрос серверу"""
+        try:
+            with open(self.descriptor_path, 'w') as f:
+                f.write(str(request_data))
+        except Exception as e:
+            self.handle_error(e)
     
     def wait_for_response(self, timeout=5):
         """Ожидает ответ от сервера"""
+        print("Клиент: Ожидаю ответ от сервера")
+        start_time = time.time()
+        last_content = ""
+        
+        while time.time() - start_time < timeout:
+            try:
+                with open(self.descriptor_path, 'r') as f:
+                    content = f.read().strip()
+                    if content and content != last_content: 
+                        print(f"Клиент: Получен ответ '{content}'")
+                        return content
+                time.sleep(0.1) 
+            except Exception as e:
+                result = self.handle_error(e)
+                if result == "fatal":
+
     
     def get_response(self, response_data):
         """Обрабатывает ответ от сервера"""
+        if response_data == "pong":
+            print(f"LOG: Успех! Сервер подтвердил связь.")
+            return True
+        elif response_data is None:
+            print("LOG: Ошибка. Ответ не получен (Timeout).")
+            return False
+        else:
+            print(f"LOG: Ошибка протокола. Получено: {response_data}")
+            return False
     
     def handle_error(self, error):
         """Обрабатывает ошибки"""
