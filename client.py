@@ -31,6 +31,15 @@ class Client:
     
     def get_response(self, response_data):
         """Обрабатывает ответ от сервера"""
+        if response_data == "pong":
+            print(f"LOG: Успех! Сервер подтвердил связь.")
+            return True
+        elif response_data is None:
+            print("LOG: Ошибка. Ответ не получен (Timeout).")
+            return False
+        else:
+            print(f"LOG: Ошибка протокола. Получено: {response_data}")
+            return False
     
     def handle_error(self, error):
         """Обрабатывает ошибки"""
