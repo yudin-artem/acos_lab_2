@@ -5,7 +5,7 @@ class Server:
         try:
             self.descriptor_path = descriptor_path
             self.file = open(self.descriptor_path, 'w+')
-            self.timeout = 5
+            self.timeout = 15
         except Exception as e:
             print(f"Сервер: ошибка инициализации: {e}")
             raise
@@ -17,7 +17,7 @@ class Server:
         if data == "ping":
             return "pong"
         else:
-            return self.handle_error(Exception(f"Сервер: Неожиданный запрос от клиента: {data}"))
+            return self.handle_error(Exception("Неожиданный запрос от клиента"))
         
     def send_response(self, response_data):
         """Отправляет ответ клиенту"""
@@ -49,7 +49,7 @@ class Server:
             try:
                 self.file.seek(0)
                 content = self.file.read().strip().lower()
-                if content and content != "":  
+                if content and content != "" and content != "retry":  
                     print(f"Сервер: Получен запрос '{content}'")
                     return content
                 time.sleep(0.5)
@@ -59,13 +59,13 @@ class Server:
 
     def run(self):
         """Основной цикл сервера"""
+        print("Сервер работает")
         while True:
             req = self.wait_for_request(self.timeout)
             if req == "retry": 
-                time.sleep(2)
                 continue 
             elif req == "fatal": 
-                print("Клиент: Завершение работы")
+                print("Сервер: Завершение работы")
                 break
             self.clear_file()
 
@@ -73,19 +73,15 @@ class Server:
             if resp == "fatal": 
                 print("Сервер: Завершение работы")
                 break
-            elif resp == "retry": 
-                time.sleep(2)
-                continue
 
             res = self.send_response(resp)
             if res == "fatal":
                 print("Сервер: Завершение работы")
                 break
             elif res == "retry":
-                time.sleep(2)
                 continue
 
-            time.sleep(2)
+            time.sleep(0.5)
 
         self.file.close()
 
