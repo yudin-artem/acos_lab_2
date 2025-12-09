@@ -53,7 +53,7 @@ class Client:
         """Обрабатывает ошибки"""
         print(f"Ошибка: {type(error).__name__} - {error}")
     
-        if hasattr(self, '_attempted_fix') and self._attempted_fix:
+        if self._attempted_fix:
             print("Уже была попытка исправления. Работа завершена.")
             return "fatal"
     
@@ -62,7 +62,7 @@ class Client:
         if error_type == 'FileNotFoundError':
             print("Попытка создать файл.")
             try:
-                self.file = open(self.descriptor_path, 'w')
+                self.file = open(self.descriptor_path, 'a+')
                 print("Файл создан.")
                 self._attempted_fix = True
                 return "retry"
@@ -82,7 +82,7 @@ class Client:
                 if os.path.exists(self.descriptor_path):
                     self.file.close()
                     os.remove(self.descriptor_path)
-                self.file = open(self.descriptor_path, 'w')
+                self.file = open(self.descriptor_path, 'a+')
                 print("Доступ восстановлен.")
                 self._attempted_fix = True
                 return "retry"

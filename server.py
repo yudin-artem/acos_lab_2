@@ -22,7 +22,7 @@ class Server:
     def send_response(self, response_data):
         """Отправляет ответ клиенту"""
         try:
-            print(f"Север: Отправляю ответ клиенту '{response_data}'")
+            print(f"Сервер: Отправляю ответ клиенту '{response_data}'")
             self.clear_file()
             self.file.write(response_data)
             self.file.flush()  
