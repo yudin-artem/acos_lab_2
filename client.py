@@ -6,7 +6,7 @@ class Client:
         try:
             self.descriptor_path = descriptor_path
             self.file = open(self.descriptor_path, 'a+')
-            self.timeout = 5
+            self.timeout = 15
             self._attempted_fix = False
         except Exception as e:
             print(f"Клиент: Ошибка инициализации: {e}")
@@ -62,7 +62,7 @@ class Client:
         if error_type == 'FileNotFoundError':
             print("Попытка создать файл.")
             try:
-                self.file = open(self.descriptor_path, 'a+')
+                self.file = open(self.descriptor_path, 'w+')
                 print("Файл создан.")
                 self._attempted_fix = True
                 return "retry"
@@ -94,19 +94,22 @@ class Client:
         
     def run(self):
         """Основной цикл клиента"""
+        print("Клиент работает")
         while True:
-            res = self.send_request("ping")
+            req = input("Введите запрос: ")
+            if req == "" or req == "retry":
+                print("Недопустимый запрос!\n")
+                continue
+            res = self.send_request(req)
             if res == "retry": 
-                time.sleep(2)
                 continue 
             if res == "fatal": 
                 print("Клиент: Завершение работы")
                 break
 
-            time.sleep(2)
+            time.sleep(0.5)
             resp = self.wait_for_response(self.timeout)
             if resp == "retry": 
-                time.sleep(2)
                 continue 
             if resp == "fatal": 
                 print("Клиент: Завершение работы")
@@ -115,7 +118,6 @@ class Client:
 
             res = self.get_response(resp)
             if res == "retry":
-                time.sleep(2)
                 continue
             if res == "fatal":
                 print("Клиент: Завершение работы")
