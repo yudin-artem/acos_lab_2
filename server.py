@@ -7,7 +7,7 @@ class Server:
             self.file = open(self.descriptor_path, 'w+')
             self.timeout = 15
         except Exception as e:
-            print(f"Сервер: ошибка инициализации: {e}")
+            print(f"server: initialization error : {e}")
             raise
     
     def get_request(self, request_data):
@@ -17,12 +17,12 @@ class Server:
         if data == "ping":
             return "pong"
         else:
-            return self.handle_error(Exception("Неожиданный запрос от клиента"))
+            return self.handle_error(Exception("unexpected client request"))
         
     def send_response(self, response_data):
         """Отправляет ответ клиенту"""
         try:
-            print(f"Сервер: Отправляю ответ клиенту '{response_data}'")
+            print(f"server: send response '{response_data}'")
             self.clear_file()
             self.file.write(response_data)
             self.file.flush()  
@@ -32,13 +32,13 @@ class Server:
     
     def handle_error(self, error):
         """Обрабатывает ошибки"""
-        print(f"--- Сервер ОШИБКА: {type(error).__name__} ---")
+        print(f"--- server error: {type(error).__name__} ---")
         if isinstance(error, (IOError, OSError)):
-            print(f"Ошибка ввода/вывода или IPC: {error}")
+            print(f"IO error: {error}")
             print("------------------------------------------------")
             return "fatal"
         else:
-            print(f"Непредвиденная ошибка: {error}")
+            print(f"unexpected error: {error}")
             print("------------------------------------------------")
             return "retry"
     
@@ -50,33 +50,33 @@ class Server:
                 self.file.seek(0)
                 content = self.file.read().strip().lower()
                 if content and content != "" and content != "retry":  
-                    print(f"Сервер: Получен запрос '{content}'")
+                    print(f"server: get request '{content}'")
                     return content
                 time.sleep(0.5)
             except Exception as e:
                 return self.handle_error(e)
-        return self.handle_error(TimeoutError("Сервер: Таймаут ожидания запроса"))
+        return self.handle_error(TimeoutError("server: timeout"))
 
     def run(self):
         """Основной цикл сервера"""
-        print("Сервер работает")
+        print("server in progress")
         while True:
             req = self.wait_for_request(self.timeout)
             if req == "retry": 
                 continue 
             elif req == "fatal": 
-                print("Сервер: Завершение работы")
+                print("server: server shutdown")
                 break
             self.clear_file()
 
             resp = self.get_request(req)
             if resp == "fatal": 
-                print("Сервер: Завершение работы")
+                print("server: server shutdown")
                 break
 
             res = self.send_response(resp)
             if res == "fatal":
-                print("Сервер: Завершение работы")
+                print("server: server shutdown")
                 break
             elif res == "retry":
                 continue

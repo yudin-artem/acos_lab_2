@@ -9,13 +9,13 @@ class Client:
             self.timeout = 15
             self.attempted_fix = False
         except Exception as e:
-            print(f"Клиент: Ошибка инициализации: {e}")
+            print(f"client: error initiallization: {e}")
             raise
     
     def send_request(self, request_data):
         """Отправляет запрос серверу"""
         try:
-            print(f"Клиент: Отправляю запрос '{request_data}'")
+            print(f"client: send request '{request_data}'")
             self.clear_file()
             self.file.write(str(request_data))
             self.file.flush()
@@ -32,73 +32,73 @@ class Client:
                 self.file.seek(0)
                 content = self.file.read().strip().lower()
                 if content and content != "": 
-                    print(f"Клиент: Получен ответ '{content}'")
+                    print(f"client: get response '{content}'")
                     return content
                 time.sleep(0.5) 
             except Exception as e:
                 return self.handle_error(e)
-        return self.handle_error(TimeoutError("Сервер: Таймаут ожидания запроса"))
+        return self.handle_error(TimeoutError("client: timeout"))
     
     def get_response(self, response_data):
         """Обрабатывает ответ от сервера"""
         if response_data == "pong":
-            print(f"Успех! Сервер подтвердил связь.\n")
+            print(f"success!\n")
             return "ok"
         elif response_data is None:
-            return self.handle_error(TimeoutError("Сервер: Таймаут ожидания запроса"))
+            return self.handle_error(TimeoutError("client: timeput"))
         else:
-            return self.handle_error(Exception(f"Неожиданный ответ от сервера: {response_data}"))
+            return self.handle_error(Exception(f"unexpected response: {response_data}"))
     
     def handle_error(self, error):
         """Обрабатывает ошибки"""
-        print(f"Ошибка: {type(error).__name__} - {error}")
+        print(f"error: {type(error).__name__} - {error}")
     
         if self.attempted_fix:
-            print("Уже была попытка исправления. Работа завершена.")
+            print("error. stoping client.")
             return "fatal"
     
         error_type = type(error).__name__
         
         if error_type == 'FileNotFoundError':
-            print("Попытка создать файл.")
+            print("attempt to create file.")
             try:
                 self.file = open(self.descriptor_path, 'w+')
-                print("Файл создан.")
+                print("file created.")
                 self.attempted_fix = True
                 return "retry"
             except Exception as e:
-                print(f"Не удалось создать файл: {e}")
+                print(f"file can not be created: {e}")
                 return "fatal"
         
         elif error_type == 'PermissionError':
-            print("Возникла проблема доступа. Попытка восстановить.")
+            print("access deny. retrying.")
             try:
                 if os.path.exists(self.descriptor_path):
                     self.file.close()
                     os.remove(self.descriptor_path)
                 self.file = open(self.descriptor_path, 'a+')
-                print("Доступ восстановлен.")
+                print("success.")
                 self.attempted_fix = True
                 return "retry"
             except Exception as e:
-                print(f"Не удалось восстановить доступ: {e}")
+                print(f"unsuccess: {e}")
                 return "fatal"
-        print("Критическая ошибка. Работа завершена.")
+        print("fatal error. stoping client.")
         return "fatal"
         
     def run(self):
         """Основной цикл клиента"""
         print("Клиент работает")
         while True:
-            req = input("Введите запрос: ")
+            req = input("enter request: ")
             if req == "" or req == "retry":
-                print("Недопустимый запрос!\n")
+                print("unexpected request!\n")
                 continue
             res = self.send_request(req)
             if res == "retry": 
                 continue 
             if res == "fatal": 
-                print("Клиент: Завершение работы")
+                print("client: client shutown")
                 break
 
             time.sleep(0.5)
@@ -106,7 +106,7 @@ class Client:
             if resp == "retry": 
                 continue 
             if resp == "fatal": 
-                print("Клиент: Завершение работы")
+                print("client: client shutown")
                 break
             self.clear_file()
 
@@ -114,7 +114,7 @@ class Client:
             if res == "retry":
                 continue
             if res == "fatal":
-                print("Клиент: Завершение работы")
+                print("client: client shutown")
                 break
 
         self.file.close()
