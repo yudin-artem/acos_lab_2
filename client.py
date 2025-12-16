@@ -70,12 +70,6 @@ class Client:
                 print(f"Не удалось создать файл: {e}")
                 return "fatal"
         
-        elif error_type == 'TimeoutError':
-            print("Сервер не отвечает. Ожидание 5 секунд.")
-            time.sleep(5)
-            self._attempted_fix = True
-            return "retry"
-        
         elif error_type == 'PermissionError':
             print("Возникла проблема доступа. Попытка восстановить.")
             try:
