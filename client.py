@@ -7,7 +7,7 @@ class Client:
             self.descriptor_path = descriptor_path
             self.file = open(self.descriptor_path, 'a+')
             self.timeout = 15
-            self._attempted_fix = False
+            self.attempted_fix = False
         except Exception as e:
             print(f"Клиент: Ошибка инициализации: {e}")
             raise
@@ -53,7 +53,7 @@ class Client:
         """Обрабатывает ошибки"""
         print(f"Ошибка: {type(error).__name__} - {error}")
     
-        if self._attempted_fix:
+        if self.attempted_fix:
             print("Уже была попытка исправления. Работа завершена.")
             return "fatal"
     
@@ -64,7 +64,7 @@ class Client:
             try:
                 self.file = open(self.descriptor_path, 'w+')
                 print("Файл создан.")
-                self._attempted_fix = True
+                self.attempted_fix = True
                 return "retry"
             except Exception as e:
                 print(f"Не удалось создать файл: {e}")
@@ -78,7 +78,7 @@ class Client:
                     os.remove(self.descriptor_path)
                 self.file = open(self.descriptor_path, 'a+')
                 print("Доступ восстановлен.")
-                self._attempted_fix = True
+                self.attempted_fix = True
                 return "retry"
             except Exception as e:
                 print(f"Не удалось восстановить доступ: {e}")
